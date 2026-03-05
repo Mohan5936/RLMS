@@ -8,32 +8,39 @@ import org.springframework.stereotype.Service;
 import com.Entity.Content;
 import com.Entity.Progress;
 import com.Entity.User;
+import com.dto.ProgressDto;
 import com.repository.ProgressRepository;
 
+import serviceIMPL.ProgressServiceImpl;
+
 @Service
-public class ProgressService {
+public class ProgressService implements ProgressServiceImpl {
 
 	@Autowired
     private ProgressRepository progressRepository;
 
-    public Progress markAsComplete(Long userId, Long lessonId) {
-        // Create new Progress object
-        Progress progress = new Progress();
+	@Override
+	public Progress markAsComplete(ProgressDto dto) {
+		// 1. Check if progress already exists to prevent duplicates
+        return progressRepository.findByUserIdAndLessonId(dto.getUserId(), dto.getLessonId())
+            .orElseGet(() -> {
+                // 2. If not found, create new Progress record
+                Progress progress = new Progress();
+                
+                // Set User Proxy
+                User user = new User();
+                user.setId(dto.getUserId());
+                progress.setUser(user);
 
-        // Link User
-        User user = new User();
-        user.setId(userId);
-        progress.setUser(user);
+                // Set Lesson Proxy (Using your Content entity)
+                Content lesson = new Content();
+                lesson.setId(dto.getLessonId());
+                progress.setLesson(lesson);
 
-        // Link Lesson
-        Content lesson = new Content();
-        lesson.setId(lessonId);
-        progress.setLesson(lesson);
-
-        // Set status
-        progress.setCompleted(true);
-        progress.setCompletionDate(LocalDateTime.now());
-
-        return progressRepository.save(progress);
-    }
+                progress.setCompleted(true);
+                progress.setCompletionDate(LocalDateTime.now());
+                
+                return progressRepository.save(progress);
+            });
+	}
 }

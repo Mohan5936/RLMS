@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.Entity.Content;
+import com.dto.ContentDto;
 import com.service.ContentService;
 
 @RestController
@@ -21,8 +22,8 @@ public class ContentController {
 	private ContentService serv;
 	
 	@PostMapping("/addContent")
-	public Content add(@RequestBody Content content) {
-		return serv.addContent(content);
+	public Content add(@RequestBody ContentDto content) {
+		return serv.saveContent(content);
 	}
 	
 	@GetMapping("/getContent/{id})")

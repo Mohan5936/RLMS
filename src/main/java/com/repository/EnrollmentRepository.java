@@ -10,7 +10,9 @@ import com.Entity.Enrollment;
 
 @Repository
 public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
-	
+//	List<Enrollment> getEnrollmentsByUserId(Long userId);
+
+	List<Enrollment> findByUserId(Long userId);
 
 
 }
