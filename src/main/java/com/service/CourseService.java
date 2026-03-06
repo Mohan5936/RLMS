@@ -30,7 +30,7 @@ public class CourseService implements CourseServiceImpl{
 	}
 
 	@Override
-	public Course saveCourse(CourseDto course) {
+	public CourseDto saveCourse(CourseDto course) {
 		// TODO Auto-generated method stub
 		Course cou=new Course();
 		cou.setCourseName(course.getCourseName());
@@ -38,12 +38,22 @@ public class CourseService implements CourseServiceImpl{
 		cou.setId(course.getId());
 		cou.setInstructorName(course.getInstructorName());
 		cou.setPrice(course.getPrice());
-		return repos.save(cou);
+		Course scourse=repos.save(cou);
+		course.setId(scourse.getId());
+		return course;
 	}
 
 	@Override
-	public Course getById(long id) {
-		// TODO Auto-generated method stub
-		return repos.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-	}
+    public CourseDto getCourseById(long id) {
+        Course course = repos.findById(id)
+                .orElseThrow(() -> new RuntimeException("Course not found")); // We will handle this in Step 2
+
+        CourseDto dto = new CourseDto();
+        dto.setId(course.getId());
+        dto.setCourseName(course.getCourseName());
+        dto.setDescription(course.getDescription());
+        dto.setInstructorName(course.getInstructorName());
+        dto.setPrice(course.getPrice());
+        return dto;
+    }
 }
