@@ -1,5 +1,7 @@
 package com.Entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,6 +23,7 @@ public class Content {
 	//next file types add cheyali
 	private String moduleTitle;
 	private String moduleDescription;
+	@JsonProperty("isAccessFree")
 	private boolean isAccessFree;
 	private String link;
 	

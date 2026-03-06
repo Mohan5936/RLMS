@@ -10,7 +10,9 @@ import com.Entity.Course;
 import com.Entity.Enrollment;
 import com.Entity.User;
 import com.dto.EnrollmentDto;
+import com.repository.CourseRepository;
 import com.repository.EnrollmentRepository;
+import com.repository.userRepository;
 
 import serviceIMPL.EnrollServiceImpl;
 
@@ -19,20 +21,20 @@ public class EnrollmentService implements EnrollServiceImpl {
 
 	@Autowired
 	private EnrollmentRepository repository;
+	@Autowired
+	private userRepository urepo;
+	@Autowired
+	private CourseRepository crepo;
 	
 	@Override
 	public Enrollment enrollUser(EnrollmentDto dto) {
 		Enrollment enrollment = new Enrollment();
 
         // Industry Mapping: Using Proxy Objects for IDs
-        User user = new User();
-        user.setId(dto.getUserId());
+        User user = urepo.findById(dto.getUserId()).orElseThrow();
         enrollment.setUser(user);
-
-        Course course = new Course();
-        course.setId(dto.getCourseId());
+        Course course = crepo.findById(dto.getCourseId()).orElseThrow();
         enrollment.setCourse(course);
-
         // Date is handled by your entity default value, 
         // but you can also set it explicitly here:
         enrollment.setEnrollmentDate(LocalDateTime.now());
