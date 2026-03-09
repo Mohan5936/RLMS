@@ -1,59 +1,73 @@
 package com.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.Entity.Course;
+import com.Entity.User;
 import com.dto.CourseDto;
 import com.repository.CourseRepository;
-
-import serviceIMPL.CourseServiceImpl;
+import com.repository.userRepository;
+import com.serviceIMPL.CourseServiceImpl;
 
 @Service
 public class CourseService implements CourseServiceImpl{
 
-	@Autowired
-	private CourseRepository repos;
-	
-//	public Course addCourse(Course course) {
-//		return repos.save(course);
-//	}
-	
-//	public Course getOne(Long id) {
-//		return repos.findById(id).orElseThrow();
-//	}
-	
-	public List<Course> getAllCourses(){
-		return repos.findAll();
-	}
+	private final CourseRepository courseRepository;
+    private final userRepository userRepository;
 
-	@Override
-	public CourseDto saveCourse(CourseDto course) {
-		// TODO Auto-generated method stub
-		Course cou=new Course();
-		cou.setCourseName(course.getCourseName());
-		cou.setDescription(course.getDescription());
-		cou.setId(course.getId());
-		cou.setInstructorName(course.getInstructorName());
-		cou.setPrice(course.getPrice());
-		Course scourse=repos.save(cou);
-		course.setId(scourse.getId());
-		return course;
-	}
+    public CourseService(CourseRepository courseRepository, userRepository userRepository) {
+        this.courseRepository = courseRepository;
+        this.userRepository = userRepository;
+    }
 
-	@Override
+    @Override
+    public CourseDto createCourse(CourseDto courseDto) {
+        // 1. Find the User who is the instructor
+        User instructor = userRepository.findById(courseDto.getInstructorId())
+                .orElseThrow(() -> new RuntimeException("Instructor not found with ID: " + courseDto.getInstructorId()));
+
+        // 2. Map DTO to Entity
+        Course course = new Course();
+        course.setCourseName(courseDto.getCourseName());
+        course.setDescription(courseDto.getDescription());
+        course.setPrice(courseDto.getPrice());
+        course.setImageUrl(courseDto.getImageUrl());
+        course.setInstructor(instructor); // Setting the relationship!
+
+        // 3. Save to DB
+        Course savedCourse = courseRepository.save(course);
+
+        // 4. Return DTO
+        return mapToDto(savedCourse);
+    }
+
+    @Override
+    public List<CourseDto> getAllCourses() {
+        return courseRepository.findAll().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public CourseDto getCourseById(long id) {
-        Course course = repos.findById(id)
-                .orElseThrow(() -> new RuntimeException("Course not found")); // We will handle this in Step 2
+        Course course = courseRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+        return mapToDto(course);
+    }
 
+    private CourseDto mapToDto(Course course) {
         CourseDto dto = new CourseDto();
         dto.setId(course.getId());
         dto.setCourseName(course.getCourseName());
         dto.setDescription(course.getDescription());
-        dto.setInstructorName(course.getInstructorName());
         dto.setPrice(course.getPrice());
+        dto.setImageUrl(course.getImageUrl());
+        dto.setInstructorId(course.getInstructor().getId());
+        // Getting the name from the User object
+        dto.setInstructorName(course.getInstructor().getFirstname() + " " + course.getInstructor().getLastname());
         return dto;
     }
 }

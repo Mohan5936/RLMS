@@ -19,22 +19,28 @@ import com.service.CourseService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/course")
+@RequestMapping("/api/courses")
 public class CourseController {
 
-	@Autowired
-	private CourseService serv;
-	
-	@PostMapping("/addCourse")
-	public ResponseEntity<CourseDto> createCourse(@Valid @RequestBody CourseDto courseDto) {
-        CourseDto savedCourse = serv.saveCourse(courseDto);
-        return new ResponseEntity<>(savedCourse, HttpStatus.CREATED);
+	private final CourseService courseService;
+
+    public CourseController(CourseService courseService) {
+        this.courseService = courseService;
     }
-	
-	@GetMapping("/{id}")
+
+    @PostMapping
+    public ResponseEntity<CourseDto> createCourse(@RequestBody CourseDto courseDto) {
+        return new ResponseEntity<>(courseService.createCourse(courseDto), HttpStatus.CREATED);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<CourseDto>> getAllCourses() {
+        return ResponseEntity.ok(courseService.getAllCourses());
+    }
+
+    @GetMapping("/{id}")
     public ResponseEntity<CourseDto> getCourseById(@PathVariable long id) {
-        CourseDto courseDto = serv.getCourseById(id);
-        return ResponseEntity.ok(courseDto);
+        return ResponseEntity.ok(courseService.getCourseById(id));
     }
 
 }

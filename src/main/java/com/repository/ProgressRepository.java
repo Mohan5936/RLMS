@@ -1,5 +1,6 @@
 package com.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +12,6 @@ import com.Entity.Progress;
 @Repository
 public interface ProgressRepository extends JpaRepository<Progress, Long> {
 
-	Optional<Progress> findByUserIdAndLessonId(Long userId, Long lessonId);
-
+	List<Progress> findByUserId(Long userId);
+    Optional<Progress> findByUserIdAndLessonId(Long userId, Long lessonId);
 }

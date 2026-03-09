@@ -10,9 +10,11 @@ import com.Entity.Enrollment;
 
 @Repository
 public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
-//	List<Enrollment> getEnrollmentsByUserId(Long userId);
 
-	List<Enrollment> findByUserId(Long userId);
-
-
+	
+	// Find all courses for a specific student
+    List<Enrollment> findByStudentId(long studentId);
+    
+    // Check if a student is already enrolled (so they don't join twice!)
+    boolean existsByStudentIdAndCourseId(long studentId, long courseId);
 }

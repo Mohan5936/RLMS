@@ -8,17 +8,14 @@ import lombok.Data;
 public class CourseDto {
 
 	private long id;
-	
-	@NotBlank(message = "Course name is required")
-	private String courseName;
-	
-	@NotBlank(message = "Course Description is required")
-	private String description;
-	
-	@NotBlank(message = "Instructor name is required")
-	private String instructorName;
-	
-	@NotBlank(message = "Price is required")
-	@PositiveOrZero(message="Price cannot be negative")
-	private float price;
+    private String courseName;
+    private String description;
+    private float price;
+    private String imageUrl;
+    
+    // For input: we need to know WHO is creating it
+    private long instructorId; 
+    
+    // For output: we show the name for convenience
+    private String instructorName;
 }
