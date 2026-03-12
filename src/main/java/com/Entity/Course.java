@@ -9,16 +9,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter; // Replaced @Data
 
 @Entity
 @Table(name = "courses")
-@Data
+@Getter
+@Setter
 public class Course {
 
-	@Id
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id; // Changed to wrapper class
     
     @Column(nullable = false)
     private String courseName;
@@ -28,11 +30,9 @@ public class Course {
     
     private float price;
 
-    // --- NEW FIELD: Course Image ---
-    // This will hold the link to the image (e.g., "https://mywebsite.com/images/java-course.png")
+    // This will hold the link to the image 
     private String imageUrl;
 
-    // --- The Real Database Relationship ---
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "instructor_id", nullable = false)
     private User instructor;

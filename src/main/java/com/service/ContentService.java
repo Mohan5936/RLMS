@@ -4,9 +4,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.Entity.Content;
 import com.Entity.Course;
+import com.Exception.ResourceNotFoundException; // Upgraded Exception
 import com.dto.ContentDto;
 import com.repository.CourseRepository;
 import com.repository.contentRepository;
@@ -15,7 +17,7 @@ import com.serviceIMPL.contentServiceImpl;
 @Service
 public class ContentService implements contentServiceImpl {
 
-	private final contentRepository contentRepository;
+    private final contentRepository contentRepository;
     private final CourseRepository courseRepository;
 
     public ContentService(contentRepository contentRepository, CourseRepository courseRepository) {
@@ -24,10 +26,11 @@ public class ContentService implements contentServiceImpl {
     }
 
     @Override
+    @Transactional // Added for database safety
     public ContentDto addContentToCourse(ContentDto dto) {
-        // 1. Verify the course exists before attaching content
+        // 1. Verify the course exists using our custom Exception
         Course course = courseRepository.findById(dto.getCourseId())
-                .orElseThrow(() -> new RuntimeException("Course not found with ID: " + dto.getCourseId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with ID: " + dto.getCourseId()));
 
         // 2. Map DTO to Entity
         Content content = new Content();
@@ -45,7 +48,7 @@ public class ContentService implements contentServiceImpl {
     }
 
     @Override
-    public List<ContentDto> getContentByCourse(long courseId) {
+    public List<ContentDto> getContentByCourse(Long courseId) { // Changed 'long' to 'Long'
         return contentRepository.findByCourseId(courseId)
                 .stream()
                 .map(this::mapToDto)
@@ -53,9 +56,9 @@ public class ContentService implements contentServiceImpl {
     }
 
     @Override
-    public ContentDto getContentById(long id) {
+    public ContentDto getContentById(Long id) { // Changed 'long' to 'Long'
         Content content = contentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Content not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Content not found with ID: " + id));
         return mapToDto(content);
     }
 
@@ -69,5 +72,5 @@ public class ContentService implements contentServiceImpl {
         dto.setLink(content.getLink());
         dto.setCourseId(content.getCourse().getId());
         return dto;
-    }	
+    }   
 }

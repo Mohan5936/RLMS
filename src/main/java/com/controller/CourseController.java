@@ -2,7 +2,6 @@ package com.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,9 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.Entity.Course;
 import com.dto.CourseDto;
-import com.service.CourseService;
+import com.serviceIMPL.CourseServiceImpl; // FIXED: Imported the interface
 
 import jakarta.validation.Valid;
 
@@ -22,14 +20,15 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/courses")
 public class CourseController {
 
-	private final CourseService courseService;
+    private final CourseServiceImpl courseService; // FIXED: Injecting the interface
 
-    public CourseController(CourseService courseService) {
+    public CourseController(CourseServiceImpl courseService) {
         this.courseService = courseService;
     }
 
     @PostMapping
-    public ResponseEntity<CourseDto> createCourse(@RequestBody CourseDto courseDto) {
+    // FIXED: Added @Valid to trigger your DTO constraints
+    public ResponseEntity<CourseDto> createCourse(@Valid @RequestBody CourseDto courseDto) {
         return new ResponseEntity<>(courseService.createCourse(courseDto), HttpStatus.CREATED);
     }
 
@@ -39,8 +38,8 @@ public class CourseController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CourseDto> getCourseById(@PathVariable long id) {
+    // FIXED: Changed 'long' to 'Long' wrapper class
+    public ResponseEntity<CourseDto> getCourseById(@PathVariable Long id) {
         return ResponseEntity.ok(courseService.getCourseById(id));
     }
-
 }

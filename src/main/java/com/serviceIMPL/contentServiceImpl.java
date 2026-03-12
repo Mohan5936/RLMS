@@ -2,18 +2,16 @@ package com.serviceIMPL;
 
 import java.util.List;
 
-import com.Entity.Content;
 import com.dto.ContentDto;
 
 public interface contentServiceImpl {
 
-	// Create new module/video
+    // Create new module/video
     ContentDto addContentToCourse(ContentDto contentDto);
     
-    // Get all modules for a specific course
-    List<ContentDto> getContentByCourse(long courseId);
+    // Get all modules for a specific course (Changed 'long' to 'Long')
+    List<ContentDto> getContentByCourse(Long courseId);
     
-    // Get a single module detail
-    ContentDto getContentById(long id);
-
+    // Get a single module detail (Changed 'long' to 'Long')
+    ContentDto getContentById(Long id);
 }

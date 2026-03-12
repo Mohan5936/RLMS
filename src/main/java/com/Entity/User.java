@@ -15,12 +15,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter; // Swapped @Data for these two
 
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
 public class User implements UserDetails {
     
     @Id
@@ -28,21 +30,18 @@ public class User implements UserDetails {
     private Long id;
 
     private String firstname;
-    
     private String lastname;
     
     @Column(unique = true)
-    private String email; // Used for login
+    private String email; 
     
     private String phonenumber;
-    
     private String password;
 
-    // We must keep this for Spring Security to handle permissions
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    // --- UserDetails Methods Required by Spring Security ---
+    // --- UserDetails Methods ---
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -51,26 +50,18 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email; // We use email as the username for logging in
+        return email; 
     }
     
     @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
+    public boolean isAccountNonExpired() { return true; }
 
     @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
+    public boolean isAccountNonLocked() { return true; }
 
     @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
+    public boolean isCredentialsNonExpired() { return true; }
 
     @Override
-    public boolean isEnabled() {
-        return true;
-    }
+    public boolean isEnabled() { return true; }
 }

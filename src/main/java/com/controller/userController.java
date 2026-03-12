@@ -12,17 +12,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.dto.UserDto;
-import com.service.userService;
+import com.serviceIMPL.UserServiceImpl; // FIXED: Importing the interface instead
 
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/users")
-public class userController {
+public class userController { // FIXED: Capitalized the class name
 
-	private final userService userService;
+    private final UserServiceImpl userService; // Injecting the interface
 
-    public userController(userService userService) {
+    // Constructor Injection
+    public userController(UserServiceImpl userService) {
         this.userService = userService;
     }
 

@@ -1,6 +1,7 @@
 package com.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -17,4 +18,9 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     
     // Check if a student is already enrolled (so they don't join twice!)
     boolean existsByStudentIdAndCourseId(long studentId, long courseId);
+    
+    List<Enrollment> findByCourseId(long courseId);
+    
+    Optional<Enrollment> findByStudentIdAndCourseId(long studentId, long courseId);
+
 }

@@ -6,7 +6,10 @@ import com.dto.CourseDto;
 
 public interface CourseServiceImpl {
 
-	CourseDto createCourse(CourseDto courseDto);
+    CourseDto createCourse(CourseDto courseDto);
+    
     List<CourseDto> getAllCourses();
-    CourseDto getCourseById(long id);
+    
+    // Changed 'long' to the wrapper class 'Long' to match the service class
+    CourseDto getCourseById(Long id); 
 }

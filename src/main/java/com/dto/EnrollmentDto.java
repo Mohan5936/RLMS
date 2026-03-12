@@ -6,12 +6,18 @@ import lombok.Data;
 
 @Data
 public class EnrollmentDto {
-	private long id;
-    private long studentId;
+    private Long id; // Matched wrapper class
+    
+    private Long studentId;
     private String studentName;
-    private long courseId;
+    
+    private Long courseId;
     private String courseName;
-    private String courseImageUrl; // Added this for the UI
+    private String courseImageUrl; 
+    
     private LocalDateTime enrollmentDate;
     private int progressPercentage;
+    
+    // ADDED: Status so the frontend can display "Completed" badges
+    private String status; 
 }

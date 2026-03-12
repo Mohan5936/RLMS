@@ -1,7 +1,5 @@
 package com.Entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -10,21 +8,23 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter; // Swapped @Data for these
 
 @Entity
 @Table(name = "content")
-@Data
+@Getter
+@Setter
 public class Content {
 
-	@Id
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id; // Changed to wrapper Long
     
     private String moduleTitle;
     private String moduleDescription;
     
-    @JsonProperty("isAccessFree")
+    // Removed @JsonProperty from the Entity layer
     private boolean isAccessFree;
     
     private String link; // This will store your video or file URL
@@ -32,5 +32,4 @@ public class Content {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="course_id", nullable = false)
     private Course course;
-	
 }

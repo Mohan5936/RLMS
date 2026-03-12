@@ -1,61 +1,117 @@
-package com.service;
+package com.service; 
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.Entity.Course;
 import com.Entity.Enrollment;
 import com.Entity.User;
+import com.Exception.ResourceNotFoundException;
 import com.dto.EnrollmentDto;
 import com.repository.CourseRepository;
 import com.repository.EnrollmentRepository;
+import com.repository.ProgressRepository;
+import com.repository.contentRepository;
 import com.repository.userRepository;
-import com.serviceIMPL.EnrollServiceImpl;
+import com.serviceIMPL.EnrollServiceImpl; 
 
 @Service
 public class EnrollmentService implements EnrollServiceImpl {
-	
-	private final EnrollmentRepository enrollmentRepo;
+    
+    private final EnrollmentRepository enrollmentRepo;
     private final userRepository userRepo;
     private final CourseRepository courseRepo;
+    private final contentRepository contentRepo;   
+    private final ProgressRepository progressRepo; 
+    private final EmailService emailService; // 1. Inject the EmailService
 
-    // Constructor Injection
     public EnrollmentService(EnrollmentRepository enrollmentRepo, 
                                  userRepository userRepo, 
-                                 CourseRepository courseRepo) {
+                                 CourseRepository courseRepo,
+                                 contentRepository contentRepo,
+                                 ProgressRepository progressRepo,
+                                 EmailService emailService) { // 2. Add to constructor
         this.enrollmentRepo = enrollmentRepo;
         this.userRepo = userRepo;
         this.courseRepo = courseRepo;
+        this.contentRepo = contentRepo;
+        this.progressRepo = progressRepo;
+        this.emailService = emailService;
     }
 
     @Override
-    public EnrollmentDto enrollStudent(long studentId, long courseId) {
-        // 1. Check if the relationship already exists
+    @Transactional
+    public EnrollmentDto enrollStudent(Long studentId, Long courseId) {
         if (enrollmentRepo.existsByStudentIdAndCourseId(studentId, courseId)) {
-            throw new RuntimeException("Error: You are already enrolled in this course.");
+            throw new IllegalStateException("Error: You are already enrolled in this course.");
         }
 
-        // 2. Fetch the Student (User) and the Course
         User student = userRepo.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found with ID: " + studentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + studentId));
         Course course = courseRepo.findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Course not found with ID: " + courseId));
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with ID: " + courseId));
 
-        // 3. Create the enrollment record
         Enrollment enrollment = new Enrollment();
         enrollment.setStudent(student);
         enrollment.setCourse(course);
-        // Default progress is 0, date is handled by @PrePersist in Entity
+        enrollment.setStatus("IN_PROGRESS"); // Default status
         
         Enrollment savedEnrollment = enrollmentRepo.save(enrollment);
+
+        // 3. Trigger Welcome Email for the Course
+        emailService.sendEmail(
+            student.getEmail(),
+            "Welcome to " + course.getCourseName(),
+            "Hi " + student.getFirstname() + ",\n\nYou have successfully enrolled in " + course.getCourseName() + ". Happy learning!"
+        );
         
         return mapToDto(savedEnrollment);
     }
 
+    // ... getStudentEnrollments and getCourseEnrollments remain the same ...
+
     @Override
-    public List<EnrollmentDto> getStudentEnrollments(long studentId) {
+    @Transactional
+    public void recalculateCourseProgress(Long studentId, Long courseId) {
+        long totalLessons = contentRepo.countByCourseId(courseId);
+        if (totalLessons == 0) return; 
+
+        long completedLessons = progressRepo.countByUserIdAndLesson_Course_IdAndIsCompletedTrue(studentId, courseId);
+        int progressPercentage = (int) Math.round(((double) completedLessons / totalLessons) * 100);
+
+        Enrollment enrollment = enrollmentRepo.findByStudentIdAndCourseId(studentId, courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment record not found"));
+
+        // Check if the course was just completed in this call
+        boolean alreadyCompleted = "COMPLETED".equals(enrollment.getStatus());
+
+        enrollment.setProgressPercentage(progressPercentage);
+
+        if (progressPercentage >= 100) {
+            enrollment.setStatus("COMPLETED");
+            
+            // 4. Trigger Completion Email (only if it wasn't already completed)
+            if (!alreadyCompleted) {
+                emailService.sendEmail(
+                    enrollment.getStudent().getEmail(),
+                    "Congratulations! Course Completed",
+                    "Hi " + enrollment.getStudent().getFirstname() + ",\n\nYou've finished 100% of " + enrollment.getCourse().getCourseName() + "! Keep up the great work."
+                
+                );
+                System.out.println("Email Sent Successfully "+enrollment.getStudent().getFirstname()+" with course of "+enrollment.getCourse().getCourseName()+" to email address "+enrollment.getStudent().getEmail());
+            }
+        } else {
+            enrollment.setStatus("IN_PROGRESS");
+        }
+
+        enrollmentRepo.save(enrollment);
+    }
+
+    @Override
+    public List<EnrollmentDto> getStudentEnrollments(Long studentId) {
         return enrollmentRepo.findByStudentId(studentId)
                 .stream()
                 .map(this::mapToDto)
@@ -63,43 +119,33 @@ public class EnrollmentService implements EnrollServiceImpl {
     }
 
     @Override
-    public List<EnrollmentDto> getCourseEnrollments(long courseId) {
-        // You would add findByCourseId to your repository for this
-        return enrollmentRepo.findAll().stream()
-                .filter(e -> e.getCourse().getId() == courseId)
+    public List<EnrollmentDto> getCourseEnrollments(Long courseId) {
+        return enrollmentRepo.findByCourseId(courseId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public EnrollmentDto updateProgress(long studentId, long courseId, int newProgress) {
-        // A simple way to update progress via the service
-        List<Enrollment> enrollments = enrollmentRepo.findByStudentId(studentId);
-        Enrollment enrollment = enrollments.stream()
-                .filter(e -> e.getCourse().getId() == courseId)
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Enrollment record not found"));
+    @Transactional
+    public EnrollmentDto updateProgress(Long studentId, Long courseId, int newProgress) {
+        Enrollment enrollment = enrollmentRepo.findByStudentIdAndCourseId(studentId, courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment record not found"));
 
         enrollment.setProgressPercentage(newProgress);
         return mapToDto(enrollmentRepo.save(enrollment));
     }
 
-    // --- The Core Mapping Logic ---
     private EnrollmentDto mapToDto(Enrollment enrollment) {
         EnrollmentDto dto = new EnrollmentDto();
         dto.setId(enrollment.getId());
         dto.setEnrollmentDate(enrollment.getEnrollmentDate());
         dto.setProgressPercentage(enrollment.getProgressPercentage());
-
-        // Map Student Details
+        dto.setStatus(enrollment.getStatus());
         dto.setStudentId(enrollment.getStudent().getId());
         dto.setStudentName(enrollment.getStudent().getFirstname() + " " + enrollment.getStudent().getLastname());
-
-        // Map Course Details (Including the Thumbnail URL)
         dto.setCourseId(enrollment.getCourse().getId());
         dto.setCourseName(enrollment.getCourse().getCourseName());
         dto.setCourseImageUrl(enrollment.getCourse().getImageUrl()); 
-
         return dto;
     }
 }

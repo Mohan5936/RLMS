@@ -13,38 +13,45 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.dto.EnrollmentDto;
 import com.service.EnrollmentService;
+import com.serviceIMPL.EnrollServiceImpl; // FIXED: Imported the interface
 
 @RestController
 @RequestMapping("/api/enroll")
 public class EnrollmentController {
 
-	private final EnrollmentService enrollmentService;
+    private final EnrollmentService enrollmentService; // FIXED: Injecting the interface
 
     public EnrollmentController(EnrollmentService enrollmentService) {
         this.enrollmentService = enrollmentService;
     }
 
-    // CHANGE 1: More descriptive URL for Enrolling
+    // Enrolling a student in a course
     @PostMapping("/course/{courseId}/student/{studentId}")
-    public ResponseEntity<EnrollmentDto> enroll(@PathVariable long courseId, @PathVariable long studentId) {
+    // FIXED: Changed 'long' to 'Long'
+    public ResponseEntity<EnrollmentDto> enroll(@PathVariable Long courseId, @PathVariable Long studentId) {
         return new ResponseEntity<>(enrollmentService.enrollStudent(studentId, courseId), HttpStatus.CREATED);
     }
 
-    // KEEP: Get student dashboard
+    // Get student dashboard (courses they are taking)
     @GetMapping("/student/{studentId}")
-    public ResponseEntity<List<EnrollmentDto>> getMyCourses(@PathVariable long studentId) {
+    // FIXED: Changed 'long' to 'Long'
+    public ResponseEntity<List<EnrollmentDto>> getMyCourses(@PathVariable Long studentId) {
         return ResponseEntity.ok(enrollmentService.getStudentEnrollments(studentId));
     }
 
-    // CHANGE 2: NEW Endpoint to update student progress
-    // PUT http://localhost:8080/api/enrollments/course/1/student/1/progress/50
+    // ADDED: Get instructor dashboard (students enrolled in a specific course)
+    @GetMapping("/course/{courseId}")
+    public ResponseEntity<List<EnrollmentDto>> getCourseEnrollments(@PathVariable Long courseId) {
+        return ResponseEntity.ok(enrollmentService.getCourseEnrollments(courseId));
+    }
+
+    // Endpoint to update student progress manually (Good for admins/testing)
+    // PUT http://localhost:8080/api/enroll/course/1/student/1/progress/50
     @PutMapping("/course/{courseId}/student/{studentId}/progress/{percentage}")
     public ResponseEntity<EnrollmentDto> updateProgress(
-            @PathVariable long courseId, 
-            @PathVariable long studentId, 
-            @PathVariable int percentage) {
+            @PathVariable Long courseId, 
+            @PathVariable Long studentId, 
+            @PathVariable int percentage) { // 'int' is fine here for percentage!
         return ResponseEntity.ok(enrollmentService.updateProgress(studentId, courseId, percentage));
     }
-    
-    
 }

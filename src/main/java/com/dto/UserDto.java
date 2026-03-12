@@ -1,6 +1,7 @@
 package com.dto;
 
 import com.Entity.Role;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -26,7 +27,9 @@ public class UserDto {
 
     @NotBlank(message = "Password is required")
     @Size(min = 6, message = "Password must be at least 6 characters long")
+    // ADDED THIS: Prevents the password from being sent back to the frontend
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) 
     private String password;
 
-    private Role role; // e.g., USER, ADMIN, INSTRUCTOR
+    private Role role; 
 }

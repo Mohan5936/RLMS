@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.Entity.Role;
 import com.Entity.User;
@@ -16,7 +17,7 @@ import com.serviceIMPL.UserServiceImpl;
 @Service
 public class userService implements UserServiceImpl {
 
-	private final userRepository userRepository;
+    private final userRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     // Constructor Injection
@@ -26,10 +27,12 @@ public class userService implements UserServiceImpl {
     }
 
     @Override
+    @Transactional // Ensures database safety during user creation
     public UserDto createUser(UserDto userDto) {
         // 1. Check if email is already taken
         if (userRepository.existsByEmail(userDto.getEmail())) {
-            throw new RuntimeException("Email is already registered!");
+            // Trigger our GlobalExceptionHandler's 400 Bad Request
+            throw new IllegalStateException("Email is already registered!");
         }
 
         // 2. Map DTO to Entity
@@ -41,18 +44,14 @@ public class userService implements UserServiceImpl {
         
         // 3. ENCRYPT THE PASSWORD
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-
-        // Set default role to USER if none is provided
-        if (userDto.getRole() == null) {
-            user.setRole(Role.USER);
-        } else {
-            user.setRole(userDto.getRole());
-        }
+       
+        // Set default role to USER using a cleaner ternary operator
+        user.setRole(userDto.getRole() != null ? userDto.getRole() : Role.USER);
 
         // 4. Save to Database
         User savedUser = userRepository.save(user);
 
-        // 5. Return mapped DTO (but hide the password!)
+        // 5. Return mapped DTO (password is safely hidden by the DTO's @JsonProperty)
         return mapToDto(savedUser);
     }
 
@@ -79,7 +78,6 @@ public class userService implements UserServiceImpl {
         dto.setEmail(user.getEmail());
         dto.setPhonenumber(user.getPhonenumber());
         dto.setRole(user.getRole());
-        // Notice we do NOT send the password back in the response for security
         return dto;
     }
 }

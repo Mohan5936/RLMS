@@ -32,7 +32,7 @@ public class ApplicationConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // 3. We provide the Authentication Manager (Spring will auto-wire the provider inside it)
+    // 3. We provide the Authentication Manager 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
